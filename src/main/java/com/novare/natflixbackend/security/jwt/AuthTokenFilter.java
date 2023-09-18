@@ -19,42 +19,41 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.novare.natflixbackend.security.services.UserDetailsServiceImpl;
 
 public class AuthTokenFilter extends OncePerRequestFilter {
-  @Autowired
-  private JwtUtils jwtUtils;
+    @Autowired
+    private JwtUtils jwtUtils;
 
-  @Autowired
-  private UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
 
-  private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
-  @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-      throws ServletException, IOException {
-    try {
-      String jwt = parseJwt(request);
-      if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-        String username = jwtUtils.getUserNameFromJwtToken(jwt);
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        try {
+            String jwt = parseJwt(request);
+            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                String username = jwtUtils.getUserNameFromJwtToken(jwt);
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        
-        UsernamePasswordAuthenticationToken authentication = 
-            new UsernamePasswordAuthenticationToken(userDetails,
-                                                    null,
-                                                    userDetails.getAuthorities());
-        
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-      }
-    } catch (Exception e) {
-      logger.error("Cannot set user authentication: {}", e);
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(userDetails,
+                                null,
+                                userDetails.getAuthorities());
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (Exception e) {
+            logger.error("Cannot set user authentication: {}", e);
+        }
+
+        filterChain.doFilter(request, response);
     }
 
-    filterChain.doFilter(request, response);
-  }
-
-  private String parseJwt(HttpServletRequest request) {
-    String jwt = jwtUtils.getJwtFromCookies(request);
-    return jwt;
-  }
+    private String parseJwt(HttpServletRequest request) {
+        return jwtUtils.getJwtFromCookies(request);
+    }
 }

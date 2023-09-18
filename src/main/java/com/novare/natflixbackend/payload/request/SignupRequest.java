@@ -1,10 +1,5 @@
 package com.novare.natflixbackend.payload.request;
 
-import java.util.Set;
-
-import com.novare.natflixbackend.models.User;
-import jakarta.validation.constraints.*;
- 
 public class SignupRequest {
 
     private Long id;
