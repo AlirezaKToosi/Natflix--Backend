@@ -1,7 +1,11 @@
 package com.novare.natflixbackend.exceptions;
 
+import lombok.Builder;
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
+@Data
+@Builder
 public class BackEndException extends RuntimeException {
 
     /**
@@ -16,18 +20,4 @@ public class BackEndException extends RuntimeException {
         this.message = message;
     }
 
-    public BackEndException(String message, HttpStatus status, String message1) {
-        super(message);
-        this.status = status;
-        this.message = message1;
-    }
-
-    public HttpStatus getStatus() {
-        return status;
-    }
-
-    @Override
-    public String getMessage() {
-        return message;
-    }
 }

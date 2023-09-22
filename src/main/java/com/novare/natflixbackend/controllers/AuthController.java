@@ -5,21 +5,21 @@ import java.util.stream.Collectors;
 
 import com.novare.natflixbackend.payload.request.LoginRequest;
 import com.novare.natflixbackend.payload.request.SignupRequest;
-import com.novare.natflixbackend.payload.response.MessageResponse;
+import com.novare.natflixbackend.payload.response.InfoResponse;
 import com.novare.natflixbackend.payload.response.UserInfoResponse;
-import com.novare.natflixbackend.repository.RoleRepository;
-import com.novare.natflixbackend.repository.UserRepository;
 import com.novare.natflixbackend.security.jwt.JwtUtils;
-import com.novare.natflixbackend.services.IUserService;
+import com.novare.natflixbackend.services.users.UserService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-import com.novare.natflixbackend.models.User;
+import com.novare.natflixbackend.models.users.User;
 import com.novare.natflixbackend.security.services.UserDetailsImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -40,19 +40,13 @@ public class AuthController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
     JwtUtils jwtUtils;
     @Autowired
-    private IUserService userService;
+    private UserService userService;
 
-    @PostMapping("/login")
+    @PostMapping("/login/")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
+        try {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
 
@@ -75,21 +69,25 @@ public class AuthController {
             case "ROLE_CUSTOMER" -> response.setType(2);
             default -> throw new IllegalArgumentException("Unexpected value: " + roles.get(0));
         }
-
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString()).body(response);
+        } catch (AuthenticationException e) {
+            // Authentication failed
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED) // 401 Unauthorized
+                    .body("Authentication failed: " + e.getMessage());
+        }
     }
 
-    @PostMapping("/signup")
+    @PostMapping("/signup/")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Error: Email is already in use!"));
+        if (userService.existsByEmail(signUpRequest.getEmail())) {
+            return ResponseEntity.badRequest().body(new InfoResponse("Error: Email is already in use!"));
         }
         // Create new user's account
         User user = new User(signUpRequest.getName(),
                 signUpRequest.getEmail(),
                 signUpRequest.getPassword());
-        final User createUser = userService.createUser(user);
+        final User createUser = userService.createUserWithCustomerRole(user);
         List<String> roles = createUser.getRoles().stream()
                 .map(item -> item.getName().name())
                 .collect(Collectors.toList());
@@ -100,10 +98,10 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/logout/")
     public ResponseEntity<?> logoutUser() {
         ResponseCookie cookie = jwtUtils.getCleanJwtCookie();
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new MessageResponse("You've been signed out!"));
+                .body(new InfoResponse("You've been signed out!"));
     }
 }
