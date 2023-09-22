@@ -1,0 +1,9 @@
+version: '3.2'
+services:
+  natflix--backend:
+    image: natflix--backend-0.0.1-snapshot
+    environment:
+      - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000
+    ports:
+      - 8085:8085
+      - 8000:8000
