@@ -10,10 +10,6 @@ For administrative purposes, authorized users possess the ability to introduce n
 You can locate the Natflix frontend in its dedicated repository, where it can be run independently on port 3000. The backend accepts requests originating from localhost:3000.
 Within the target directory in this repository, you'll find a dockerfile and docker images of the project.
 
-## Backend
-
-The backend for this project will be developed using Java with the SpringBoot framework and Hibernate for database interaction. connect the backend to a MySQL database using IntelliJ IDEA.
-
 ## Run the application
 ### A:  with use of Docker image:
 To run this application do the following steps.
@@ -36,9 +32,10 @@ Before you can run the  program , make sure you have the following prerequisites
         spring.datasource.url: Set the URL of your MySQL database.
         spring.datasource.username: Set the username for your MySQL instance.
         spring.datasource.password: Set the password for your MySQL instance.
+   3.initialize Database with Sql Script in init sql folder 
 ### Running the Backend
 
-1. Open a terminal in the ShoppingCard-Backend folder. 
+1. Open a terminal in the Natflix--Backend folder. 
 2. Build the project using Maven 
 3. Run the backend application using the following command:
 4. java -jar Natflix__Backend_jar 
